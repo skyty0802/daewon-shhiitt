@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜덤 자리 배치 프로그램 (고급)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>랜덤 자리 배치 프로그램</h1>
+
+        <div class="section">
+            <h2>1. 학생 관리</h2>
+            <div class="student-input-group">
+                <label for="regularStudentNameInput">일반 학생:</label>
+                <input type="text" id="regularStudentNameInput" placeholder="학생 이름 입력 (쉼표로 구분)">
+                <button id="addRegularStudentBtn">학생 추가</button>
+            </div>
+            <div class="student-input-group">
+                <label for="frontRowStudentNameInput">앞자리 희망 학생:</label>
+                <input type="text" id="frontRowStudentNameInput" placeholder="학생 이름 입력 (쉼표로 구분)">
+                <button id="addFrontRowStudentBtn">학생 추가</button>
+            </div>
+            <div class="student-input-group">
+                <label for="backRowStudentNameInput">뒷자리 희망 학생:</label>
+                <input type="text" id="backRowStudentNameInput" placeholder="학생 이름 입력 (쉼표로 구분)">
+                <button id="addBackRowStudentBtn">학생 추가</button>
+            </div>
+            
+            <h3>전체 학생 목록</h3>
+            <ul id="studentList"></ul>
+            <button id="clearAllStudentsBtn">모든 학생 목록 초기화</button>
+        </div>
+
+        <div class="section">
+            <h2>2. 자리 배치 설정</h2>
+            <label for="rows">행 (가로):</label>
+            <input type="number" id="rows" value="4" min="1">
+            <label for="cols">열 (세로):</label>
+            <input type="number" id="cols" value="5" min="1">
+            <button id="createDeskMapBtn">자리 배치도 생성</button>
+            <div id="deskMapContainer" class="editable-map"></div>
+            <p class="instruction">X표시할 자리를 클릭하세요.</p>
+        </div>
+
+        <div class="section">
+            <h2>3. 자리 배치 결과</h2>
+            <div class="checkbox-group">
+                <input type="checkbox" id="enablePairing">
+                <label for="enablePairing">짝꿍 자리 배치 (가로 2자리 우선, 짝수 인원 권장)</label>
+            </div>
+            <button id="shuffleBtn">자리 랜덤 배치</button>
+            <div class="desk-map-wrapper">
+                <div class="label board-label">칠판</div>
+                <div class="label aisle-label">복도</div>
+                <div id="resultDeskMapContainer"></div>
+                <div class="label window-label">창가</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
