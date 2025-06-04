@@ -1,363 +1,366 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const regularStudentNameInput = document.getElementById('regularStudentNameInput');
-    const addRegularStudentBtn = document.getElementById('addRegularStudentBtn');
-    const frontRowStudentNameInput = document.getElementById('frontRowStudentNameInput');
-    const addFrontRowStudentBtn = document.getElementById('addFrontRowStudentBtn');
-    const backRowStudentNameInput = document.getElementById('backRowStudentNameInput');
-    const addBackRowStudentBtn = document.getElementById('addBackRowStudentBtn');
-    const studentList = document.getElementById('studentList');
-    const clearAllStudentsBtn = document.getElementById('clearAllStudentsBtn');
-    const rowsInput = document.getElementById('rows');
-    const colsInput = document.getElementById('cols');
-    const createDeskMapBtn = document.getElementById('createDeskMapBtn');
-    const deskMapContainer = document.getElementById('deskMapContainer');
-    const shuffleBtn = document.getElementById('shuffleBtn');
-    const resultDeskMapContainer = document.getElementById('resultDeskMapContainer');
-    const enablePairingCheckbox = document.getElementById('enablePairing');
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    background-color: #f4f7f6;
+    margin: 20px;
+    color: #333;
+}
 
-    // Each student will be an object: { name: 'Student Name', type: 'regular' | 'front' | 'back' }
-    let allStudents = [];
-    let currentRowCount = parseInt(rowsInput.value);
-    let currentColCount = parseInt(colsInput.value);
-    let unavailableSeats = []; // Indices of seats marked as 'X' (0-indexed)
+.container {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px;
+}
 
-    // Load data from local storage
-    function loadData() {
-        const storedAllStudents = localStorage.getItem('allStudents');
-        if (storedAllStudents) {
-            allStudents = JSON.parse(storedAllStudents);
-            renderStudentList();
-        }
-        const storedRows = localStorage.getItem('rows');
-        const storedCols = localStorage.getItem('cols');
-        if (storedRows && storedCols) {
-            rowsInput.value = parseInt(storedRows);
-            colsInput.value = parseInt(storedCols);
-            currentRowCount = parseInt(storedRows);
-            currentColCount = parseInt(storedCols);
-        }
-        const storedUnavailableSeats = localStorage.getItem('unavailableSeats');
-        if (storedUnavailableSeats) {
-            unavailableSeats = JSON.parse(storedUnavailableSeats);
-        }
-        const storedEnablePairing = localStorage.getItem('enablePairing');
-        if (storedEnablePairing) {
-            enablePairingCheckbox.checked = JSON.parse(storedEnablePairing);
-        }
-        // Initial desk map creation with current state
-        createDeskMap(deskMapContainer, currentRowCount, currentColCount, [], true, enablePairingCheckbox.checked);
+h1 {
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 30px;
+}
+
+.section {
+    background-color: #e9f0f7;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border: 1px solid #d1e2f3;
+}
+
+h2, h3 {
+    color: #004085;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #a7d0ed;
+    padding-bottom: 5px;
+}
+
+.student-input-group, .save-input-group { /* Added .save-input-group */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.student-input-group label, .save-input-group label { /* Added .save-input-group */
+    flex-basis: 100px;
+    font-weight: bold;
+    color: #555;
+}
+
+.student-input-group input[type="text"], .save-input-group input[type="text"] { /* Added .save-input-group */
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-bottom: 0;
+}
+
+.student-input-group button, .save-input-group button { /* Added .save-input-group */
+    flex-shrink: 0;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    background-color: #28a745;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.student-input-group button:hover, .save-input-group button:hover { /* Added .save-input-group */
+    background-color: #218838;
+}
+
+input[type="number"] {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-right: 10px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.small-btn {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+#clearAllStudentsBtn {
+    background-color: #dc3545;
+    margin-top: 15px;
+}
+#clearAllStudentsBtn:hover {
+    background-color: #c82333;
+}
+
+#shuffleBtn {
+    background-color: #ffc107;
+    color: #333;
+}
+#shuffleBtn:hover {
+    background-color: #e0a800;
+}
+
+#studentList, #constraintList {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 15px;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+#studentList li, #constraintList li {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#studentList li:last-child, #constraintList li:last-child {
+    border-bottom: none;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+/* Specific styles for preference students in the combined list */
+#studentList li.front-row-pref {
+    background-color: #e6f7ff;
+}
+
+#studentList li.back-row-pref {
+    background-color: #fff0e6;
+}
+
+#studentList li.fixed-seat-pref {
+    background-color: #e6ffe6;
+    font-weight: bold;
+    border: 1px dashed #28a745;
+}
+
+#constraintList li.buddy-pair-pref {
+    background-color: #f0f0ff;
+}
+
+#constraintList li.enemy-pair-pref {
+    background-color: #ffe6e6;
+}
+
+
+#deskMapContainer,
+#resultDeskMapContainer,
+#loadedSavedMap { /* Changed from #loadedHistoryMap */
+    margin-top: 20px;
+    display: grid;
+    gap: 5px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f0f8ff;
+}
+
+.desk-cell {
+    width: 80px;
+    height: 80px;
+    border: 2px solid #6c757d;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    background-color: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    word-break: keep-all;
+    text-align: center;
+    font-size: 0.9em;
+    padding: 5px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.desk-cell.unavailable {
+    background-color: #f8d7da;
+    border: 2px dashed #dc3545;
+    color: #dc3545;
+    font-weight: bolder;
+    font-size: 1.5em;
+}
+
+.desk-cell.paired-group-start {
+    border-right: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    background-color: #e0ffe0;
+}
+
+.desk-cell.paired-group-end {
+    border-left: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    background-color: #e0ffe0;
+}
+
+#deskMapContainer.grid-layout,
+#resultDeskMapContainer.grid-layout,
+#loadedSavedMap.grid-layout { /* Changed from #loadedHistoryMap */
+    grid-template-columns: repeat(var(--cols), 1fr);
+    grid-template-rows: repeat(var(--rows), 1fr);
+}
+
+.instruction {
+    text-align: center;
+    color: #666;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+
+.checkbox-group {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    transform: scale(1.3);
+}
+.checkbox-group label {
+    font-size: 1.1em;
+    color: #444;
+}
+
+.desk-map-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    padding: 30px 80px 0 80px;
+}
+
+.desk-map-wrapper .label {
+    font-weight: bold;
+    color: #555;
+    position: absolute;
+    padding: 5px 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 0.9em;
+    z-index: 2;
+}
+
+.desk-map-wrapper .board-label {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+.desk-map-wrapper .aisle-label {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+    white-space: nowrap;
+    transform-origin: center center;
+}
+
+.desk-map-wrapper .window-label {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%) rotate(90deg);
+    white-space: nowrap;
+    transform-origin: center center;
+}
+
+#resultDeskMapContainer, #loadedSavedMap { /* Changed from #loadedHistoryMap */
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+#savedArrangementSelect { /* Changed from #historySelect */
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
     }
-
-    // Save data to local storage
-    function saveData() {
-        localStorage.setItem('allStudents', JSON.stringify(allStudents));
-        localStorage.setItem('rows', rowsInput.value);
-        localStorage.setItem('cols', colsInput.value);
-        localStorage.setItem('unavailableSeats', JSON.stringify(unavailableSeats));
-        localStorage.setItem('enablePairing', JSON.stringify(enablePairingCheckbox.checked));
+    input[type="text"],
+    input[type="number"],
+    button {
+        font-size: 14px;
+        padding: 8px;
     }
-
-    // Render the combined student list
-    function renderStudentList() {
-        studentList.innerHTML = '';
-        allStudents.forEach((studentObj, index) => {
-            const li = document.createElement('li');
-            li.textContent = studentObj.name;
-            li.dataset.index = index; // Store index for deletion
-
-            // Add class based on student type for styling
-            if (studentObj.type === 'front') {
-                li.classList.add('front-row-pref');
-                li.textContent += ' (앞자리 희망)';
-            } else if (studentObj.type === 'back') {
-                li.classList.add('back-row-pref');
-                li.textContent += ' (뒷자리 희망)';
-            }
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.classList.add('delete-btn');
-            deleteBtn.textContent = '삭제';
-            deleteBtn.dataset.index = index; // Store index for deletion
-            li.appendChild(deleteBtn);
-            studentList.appendChild(li);
-        });
-        saveData();
+    .student-input-group label, .save-input-group label { /* Added .save-input-group */
+        flex-basis: 80px;
     }
-
-    // Add students to the allStudents array
-    function addStudents(inputElement, studentType) {
-        const inputNames = inputElement.value.trim();
-        if (inputNames) {
-            const newNames = inputNames.split(',').map(name => name.trim()).filter(name => name !== '');
-            let duplicates = [];
-
-            newNames.forEach(name => {
-                if (!name) return;
-                // Check for duplicate names across all student types
-                if (allStudents.some(student => student.name === name)) {
-                    duplicates.push(name);
-                } else {
-                    allStudents.push({ name: name, type: studentType });
-                }
-            });
-
-            if (duplicates.length > 0) {
-                alert(`"${duplicates.join(', ')}"은(는) 이미 존재하는 학생 이름입니다. (다른 카테고리에 있을 수 있습니다)`);
-            }
-            inputElement.value = '';
-            renderStudentList();
-        }
+    .student-input-group input[type="text"], .save-input-group input[type="text"] { /* Added .save-input-group */
+        flex-basis: calc(100% - 100px);
     }
-
-    // Event listeners for adding students
-    addRegularStudentBtn.addEventListener('click', () => addStudents(regularStudentNameInput, 'regular'));
-    addFrontRowStudentBtn.addEventListener('click', () => addStudents(frontRowStudentNameInput, 'front'));
-    addBackRowStudentBtn.addEventListener('click', () => addStudents(backRowStudentNameInput, 'back'));
-
-    // Enable Enter key to add students
-    regularStudentNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addRegularStudentBtn.click(); });
-    frontRowStudentNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addFrontRowStudentBtn.click(); });
-    backRowStudentNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addBackRowStudentBtn.click(); });
-
-    // Delete student from the list
-    studentList.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-btn')) {
-            const index = parseInt(e.target.dataset.index);
-            allStudents.splice(index, 1);
-            renderStudentList();
-        }
-    });
-
-    // Clear all students
-    clearAllStudentsBtn.addEventListener('click', () => {
-        if (confirm('모든 학생 목록을 초기화하시겠습니까?')) {
-            allStudents = [];
-            renderStudentList();
-        }
-    });
-
-    // Create desk map (preview and editable mode)
-    function createDeskMap(container, rows, cols, studentNames = [], editable = false, isPairingMode = false) {
-        container.innerHTML = '';
-        container.classList.add('grid-layout');
-        container.style.setProperty('--rows', rows);
-        container.style.setProperty('--cols', cols);
-
-        const totalCells = rows * cols;
-        for (let i = 0; i < totalCells; i++) {
-            const deskCell = document.createElement('div');
-            deskCell.classList.add('desk-cell');
-            deskCell.dataset.index = i; // Store cell index (0 to totalCells - 1)
-            deskCell.textContent = studentNames[i] || ''; // Display student name or empty
-
-            if (editable) {
-                // Display 'X' for unavailable seats in editable mode
-                if (unavailableSeats.includes(i)) {
-                    deskCell.classList.add('unavailable');
-                    deskCell.textContent = 'X';
-                }
-                // Toggle unavailable seat on click
-                deskCell.addEventListener('click', () => {
-                    toggleUnavailableSeat(i, deskCell);
-                });
-            }
-            container.appendChild(deskCell);
-        }
-
-        // Apply pairing mode CSS classes after cells are created
-        if (isPairingMode) {
-            const deskCells = container.querySelectorAll('.desk-cell');
-            deskCells.forEach((cell, i) => {
-                const colIndex = i % cols;
-                // If current cell is an even column and not the last column in the row
-                if (colIndex % 2 === 0 && colIndex < cols - 1) {
-                    // Check if both current cell and the next cell are available (not 'X')
-                    if (!unavailableSeats.includes(i) && !unavailableSeats.includes(i + 1)) {
-                        cell.classList.add('paired-group-start');
-                        if (deskCells[i + 1]) { // Ensure the next cell exists
-                            deskCells[i + 1].classList.add('paired-group-end');
-                        }
-                    }
-                }
-            });
-        }
+    .desk-cell {
+        width: 60px;
+        height: 60px;
+        font-size: 0.8em;
     }
-
-    // Toggle unavailable seat
-    function toggleUnavailableSeat(index, cellElement) {
-        if (unavailableSeats.includes(index)) {
-            unavailableSeats = unavailableSeats.filter(item => item !== index);
-            cellElement.classList.remove('unavailable');
-            cellElement.textContent = ''; // Clear 'X'
-        } else {
-            unavailableSeats.push(index);
-            cellElement.classList.add('unavailable');
-            cellElement.textContent = 'X';
-        }
-        saveData();
+    .desk-map-wrapper {
+        padding: 25px 60px 0 60px;
     }
-
-    // Update preview when rows/cols change
-    createDeskMapBtn.addEventListener('click', () => {
-        const newRows = parseInt(rowsInput.value);
-        const newCols = parseInt(colsInput.value);
-
-        if (isNaN(newRows) || newRows < 1 || isNaN(newCols) || newCols < 1) {
-            alert('행과 열은 1 이상의 숫자로 입력해주세요.');
-            return;
-        }
-        currentRowCount = newRows;
-        currentColCount = newCols;
-        unavailableSeats = []; // Reset unavailable seats when map size changes
-        createDeskMap(deskMapContainer, currentRowCount, currentColCount, [], true, enablePairingCheckbox.checked);
-        saveData();
-    });
-
-    // Update preview when pairing checkbox changes
-    enablePairingCheckbox.addEventListener('change', () => {
-        createDeskMap(deskMapContainer, currentRowCount, currentColCount, [], true, enablePairingCheckbox.checked);
-        saveData();
-    });
-
-    // Fisher-Yates shuffle algorithm
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
+    .desk-map-wrapper .label {
+        font-size: 0.8em;
+        padding: 3px 6px;
     }
-
-    // Random seat assignment
-    shuffleBtn.addEventListener('click', () => {
-        const totalSeats = currentRowCount * currentColCount;
-        let assignedStudents = new Array(totalSeats).fill(''); // Initialize all seats as empty
-        let occupiedSeats = new Set(); // Keep track of occupied seat indices
-
-        const availableSeats = []; // Indices of seats that are not marked 'X'
-        for (let i = 0; i < totalSeats; i++) {
-            if (!unavailableSeats.includes(i)) {
-                availableSeats.push(i);
-            }
-        }
-        const availableSeatsCount = availableSeats.length;
-
-        if (allStudents.length === 0) {
-            alert('학생을 먼저 추가해주세요.');
-            return;
-        }
-        if (allStudents.length > availableSeatsCount) {
-            alert(`학생 수(${allStudents.length}명)가 앉을 수 있는 자리 수(${availableSeatsCount}개)보다 많습니다. 학생을 줄이거나 앉지 않을 자리를 줄여주세요.`);
-            return;
-        }
-
-        // Separate students by preference
-        let frontRowHopefuls = shuffleArray(allStudents.filter(s => s.type === 'front').map(s => s.name));
-        let backRowHopefuls = shuffleArray(allStudents.filter(s => s.type === 'back').map(s => s.name));
-        let regularStudents = shuffleArray(allStudents.filter(s => s.type === 'regular').map(s => s.name));
-
-        // Get available seat indices for each preference
-        let frontSeats = availableSeats.filter(index => Math.floor(index / currentColCount) < Math.ceil(currentRowCount / 2)); // First half of rows
-        let backSeats = availableSeats.filter(index => Math.floor(index / currentColCount) >= Math.floor(currentRowCount / 2)); // Second half of rows
-        
-        frontSeats = shuffleArray(frontSeats);
-        backSeats = shuffleArray(backSeats);
-        
-        // Prioritize front-row hopefuls for front seats
-        let assignedFrontHopefuls = 0;
-        while (frontRowHopefuls.length > 0 && frontSeats.length > 0) {
-            const studentName = frontRowHopefuls.shift();
-            const seat = frontSeats.shift();
-            assignedStudents[seat] = studentName;
-            occupiedSeats.add(seat);
-            assignedFrontHopefuls++;
-        }
-        // If front-row hopefuls remain and front seats are exhausted, they become regular
-        regularStudents.push(...frontRowHopefuls);
-
-        // Prioritize back-row hopefuls for back seats
-        let assignedBackHopefuls = 0;
-        while (backRowHopefuls.length > 0 && backSeats.length > 0) {
-            const studentName = backRowHopefuls.shift();
-            const seat = backSeats.shift();
-            assignedStudents[seat] = studentName;
-            occupiedSeats.add(seat);
-            assignedBackHopefuls++;
-        }
-        // If back-row hopefuls remain and back seats are exhausted, they become regular
-        regularStudents.push(...backRowHopefuls);
-
-        // All remaining students (regular + unassigned hopefuls)
-        let remainingStudents = shuffleArray(regularStudents);
-
-        // Get all currently available seats (those not yet occupied)
-        let currentAvailableSeats = shuffleArray(availableSeats.filter(seat => !occupiedSeats.has(seat)));
-
-        // Pairing mode logic
-        if (enablePairingCheckbox.checked) {
-            if (remainingStudents.length % 2 !== 0 && remainingStudents.length > 0) {
-                console.warn('짝꿍 배치는 학생 수가 짝수일 때 효과적입니다. 현재 짝꿍으로 배치되지 못하는 학생이 있을 수 있습니다.');
-            }
-
-            let pairedStudentGroups = [];
-            while (remainingStudents.length >= 2) {
-                pairedStudentGroups.push([remainingStudents.shift(), remainingStudents.shift()]);
-            }
-            if (remainingStudents.length === 1) {
-                pairedStudentGroups.push([remainingStudents.shift()]);
-            }
-            pairedStudentGroups = shuffleArray(pairedStudentGroups);
-
-            let tempRemainingStudents = [];
-            for (const pair of pairedStudentGroups) {
-                if (pair.length === 2) { // Try to assign pairs horizontally
-                    let assigned = false;
-                    for (let i = 0; i < currentAvailableSeats.length; i++) {
-                        const seat1 = currentAvailableSeats[i];
-                        // Check if seat1 is available and has an adjacent seat2 in the same row
-                        if (!occupiedSeats.has(seat1) && (seat1 % currentColCount) < (currentColCount - 1)) {
-                            const seat2 = seat1 + 1;
-                            // Check if seat2 is also available and not an 'X' seat
-                            if (!occupiedSeats.has(seat2) && !unavailableSeats.includes(seat2)) {
-                                assignedStudents[seat1] = pair[0];
-                                assignedStudents[seat2] = pair[1];
-                                occupiedSeats.add(seat1);
-                                occupiedSeats.add(seat2);
-                                assigned = true;
-                                // Remove assigned seats from currentAvailableSeats
-                                currentAvailableSeats = currentAvailableSeats.filter(s => s !== seat1 && s !== seat2);
-                                break;
-                            }
-                        }
-                    }
-                    if (!assigned) { // If horizontal pair couldn't be assigned, add back to remaining students
-                        tempRemainingStudents.push(pair[0], pair[1]);
-                    }
-                } else { // Single student
-                    tempRemainingStudents.push(pair[0]);
-                }
-            }
-            remainingStudents = shuffleArray(tempRemainingStudents); // Students not paired horizontally
-        }
-
-        // Assign remaining students to any available seats
-        currentAvailableSeats = shuffleArray(availableSeats.filter(seat => !occupiedSeats.has(seat)));
-        let studentIdx = 0;
-        while (studentIdx < remainingStudents.length && currentAvailableSeats.length > 0) {
-            const seat = currentAvailableSeats.shift();
-            assignedStudents[seat] = remainingStudents[studentIdx];
-            occupiedSeats.add(seat);
-            studentIdx++;
-        }
-
-        if (studentIdx < remainingStudents.length) {
-            console.warn("모든 학생을 배치하지 못했습니다. (자리 부족)");
-        }
-        
-        // Render the final result
-        createDeskMap(resultDeskMapContainer, currentRowCount, currentColCount, assignedStudents, false, enablePairingCheckbox.checked);
-    });
-
-    // Load data on page load
-    loadData();
-});
+    .desk-map-wrapper .board-label {
+        top: 0;
+    }
+    .desk-map-wrapper .aisle-label {
+        left: 0;
+    }
+    .desk-map-wrapper .window-label {
+        right: 0;
+    }
+}
